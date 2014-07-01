@@ -78,7 +78,7 @@ export function openShell(options = {}) {
         if (!current)
             return;
 
-        if (errStream) stderr.write(errStream);
+        if (errStream) errStream.write(data);
         else error += data;
     });
 
