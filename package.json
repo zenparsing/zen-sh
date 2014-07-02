@@ -1,6 +1,6 @@
 {
     "name": "zen-sh",
-    "version": "0.0.4",
+    "version": "0.0.5",
     "description": "Shelling with Tagged Template Strings",
     "homepage": "https://github.com/zenparsing/zen-sh"
 }
