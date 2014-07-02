@@ -113,6 +113,9 @@ export function openShell(options = {}) {
                 reject(new Error("Command in progress"));
 
             current = { resolve, reject };
+            
+            if (typeof callSite === "string")
+                callSite = [callSite];
 
             let cmd = "";
 
@@ -121,8 +124,10 @@ export function openShell(options = {}) {
                 cmd += callSite[i];
                 if (i < args.length) cmd += escape(args[i]);
             }
+            
+            cmd = cmd.trim();
 
-            cmd += `; echo ${ END_SIGNATURE }:$?\n`;
+            cmd += `;echo ${ END_SIGNATURE }:$?\n`;
 
             child.stdin.write(cmd);
         });
