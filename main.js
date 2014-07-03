@@ -1,4 +1,4 @@
-const spawn = require("child_process").spawn;
+import { spawn } from "node:child_process";
 
 const END_SIGNATURE = "end-of-command-sequence",
       END_PATTERN = /end-of-command-sequence:(\d+)\n$/;
@@ -28,6 +28,16 @@ export function openShell(options = {}) {
         error = "";
     }
 
+    function extendError(e, code) {
+
+        e.message = error ? "Shell Error: " + error : "Shell Error";
+        e.shellOutput = output;
+        e.shellError = error;
+        e.code = code;
+
+        return e;
+    }
+
     let child = spawn(shell, { cwd }),
         current = null,
         outStream = null,
@@ -41,8 +51,7 @@ export function openShell(options = {}) {
 
         if (current) {
 
-            // TODO: attach code?
-            if (code) current.reject(new Error(error));
+            if (code) current.reject(extendError(new Error, code));
             else current.resolve({ output, error });
 
             reset();
@@ -60,8 +69,7 @@ export function openShell(options = {}) {
 
             let code = parseInt((m[1] || "").trim());
 
-            // TODO:  attach code?
-            if (code) current.reject(new Error(error));
+            if (code) current.reject(extendError(new Error, code));
             else current.resolve({ output, error });
 
             reset();
@@ -83,6 +91,12 @@ export function openShell(options = {}) {
     });
 
     function pipe(out = null, err = null) {
+
+        if (!out && !err) {
+
+            out = process.stdout;
+            err = process.stderr;
+        }
 
         outStream = out;
         errStream = err;
@@ -113,7 +127,7 @@ export function openShell(options = {}) {
                 reject(new Error("Command in progress"));
 
             current = { resolve, reject };
-            
+
             if (typeof callSite === "string")
                 callSite = [callSite];
 
@@ -124,7 +138,7 @@ export function openShell(options = {}) {
                 cmd += callSite[i];
                 if (i < args.length) cmd += escape(args[i]);
             }
-            
+
             cmd = cmd.trim();
 
             cmd += `;echo ${ END_SIGNATURE }:$?\n`;
