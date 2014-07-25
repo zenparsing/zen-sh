@@ -3,6 +3,24 @@ import { spawn } from "node:child_process";
 const END_SIGNATURE = "end-of-command-sequence",
       END_PATTERN = /end-of-command-sequence:(\d+)\n$/;
 
+function escape(arg) {
+
+    return "'" + arg.replace(/'+/g, "'\"$&\"'") + "'";
+}
+
+export function command(callSite, ...args) {
+
+    let cmd = "";
+
+    for (let i = 0; i < callSite.length; ++i) {
+
+        cmd += callSite[i];
+        if (i < args.length) cmd += escape(args[i]);
+    }
+
+    return cmd;
+}
+
 export function openShell(options = {}) {
 
     const {
@@ -12,12 +30,6 @@ export function openShell(options = {}) {
         cwd = null
 
     } = options;
-
-    function escape(arg) {
-
-        // TODO: This needs much more work
-        return arg.replace(/\s/g, "\\$&");
-    }
 
     function reset() {
 
@@ -131,16 +143,7 @@ export function openShell(options = {}) {
             if (typeof callSite === "string")
                 callSite = [callSite];
 
-            let cmd = "";
-
-            for (let i = 0; i < callSite.length; ++i) {
-
-                cmd += callSite[i];
-                if (i < args.length) cmd += escape(args[i]);
-            }
-
-            cmd = cmd.trim();
-
+            let cmd = command(callSite, ...args).trim();
             cmd += `;echo ${ END_SIGNATURE }:$?\n`;
 
             child.stdin.write(cmd);
@@ -149,5 +152,5 @@ export function openShell(options = {}) {
         p.pipe = pipe;
 
         return p;
-    }
+    };
 }
