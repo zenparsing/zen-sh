@@ -3,19 +3,19 @@ import { spawn } from "node:child_process";
 const END_SIGNATURE = "end-of-command-sequence",
       END_PATTERN = /end-of-command-sequence:(\d+)\n$/;
 
-function escape(arg) {
+function encodeArgument(arg) {
 
     return "'" + arg.replace(/'+/g, "'\"$&\"'") + "'";
 }
 
-export function command(callSite, ...args) {
+function commandString(callSite, ...args) {
 
     let cmd = "";
 
     for (let i = 0; i < callSite.length; ++i) {
 
         cmd += callSite[i];
-        if (i < args.length) cmd += escape(args[i]);
+        if (i < args.length) cmd += encodeArgument(args[i]);
     }
 
     return cmd;
@@ -50,7 +50,7 @@ export function openShell(options = {}) {
         return e;
     }
 
-    let child = spawn(shell, { cwd }),
+    let child = spawn(shell, { cwd, env }),
         current = null,
         outStream = null,
         errStream = null,
@@ -143,7 +143,7 @@ export function openShell(options = {}) {
             if (typeof callSite === "string")
                 callSite = [callSite];
 
-            let cmd = command(callSite, ...args).trim();
+            let cmd = commandString(callSite, ...args).trim();
             cmd += `;echo ${ END_SIGNATURE }:$?\n`;
 
             child.stdin.write(cmd);
