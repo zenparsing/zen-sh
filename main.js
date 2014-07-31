@@ -42,12 +42,18 @@ export function openShell(options = {}) {
 
     function extendError(e, code) {
 
-        e.message = error ? "Shell Error: " + error : "Shell Error";
+        e.name = "ShellError";
+        e.message = error;
         e.shellOutput = output;
         e.shellError = error;
         e.code = code;
 
         return e;
+    }
+
+    function outObject() {
+
+        return { output: output.trim(), error: error.trim() };
     }
 
     let child = spawn(shell, { cwd, env }),
@@ -64,7 +70,7 @@ export function openShell(options = {}) {
         if (current) {
 
             if (code) current.reject(extendError(new Error, code));
-            else current.resolve({ output, error });
+            else current.resolve(outObject());
 
             reset();
         }
@@ -82,7 +88,7 @@ export function openShell(options = {}) {
             let code = parseInt((m[1] || "").trim());
 
             if (code) current.reject(extendError(new Error, code));
-            else current.resolve({ output, error });
+            else current.resolve(outObject());
 
             reset();
 
