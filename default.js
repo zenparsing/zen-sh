@@ -56,7 +56,7 @@ export function openShell(options = {}) {
         return { output: output.trim(), error: error.trim() };
     }
 
-    let child = spawn(shell, { cwd, env }),
+    let child = spawn(shell, [], { cwd, env }),
         current = null,
         outStream = null,
         errStream = null,
